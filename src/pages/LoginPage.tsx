@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { Server, Lock, Mail, ArrowRight, AlertCircle, Loader2, ShieldAlert, User } from 'lucide-react';
+import { VerifyEmailModal } from '../components/VerifyEmailModal';
 
 interface LoginPageProps {
   setActiveTab: (tab: string) => void;
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ setActiveTab }) => {
-  const { login } = useAuth();
+  const { login, pendingEmail, setPendingEmail } = useAuth();
   const { t } = useLanguage();
 
   const [email, setEmail] = useState('');
@@ -23,6 +24,10 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setActiveTab }) => {
 
     const res = await login(email, password);
     setLoading(false);
+
+    if (res.requireVerification) {
+      return;
+    }
 
     if (res.success) {
       setActiveTab('dashboard');
@@ -49,6 +54,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setActiveTab }) => {
 
   return (
     <div className="py-12 px-4 max-w-md mx-auto">
+      {pendingEmail && (
+        <VerifyEmailModal
+          email={pendingEmail}
+          onClose={() => setPendingEmail(null)}
+          onSuccess={() => setActiveTab('dashboard')}
+        />
+      )}
+
       <div className="p-8 rounded-3xl bg-[#0f1117] border border-indigo-500/20 shadow-2xl space-y-6">
         
         {/* Brand */}

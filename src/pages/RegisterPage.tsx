@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { Server, Lock, Mail, User, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
+import { VerifyEmailModal } from '../components/VerifyEmailModal';
 
 interface RegisterPageProps {
   setActiveTab: (tab: string) => void;
 }
 
 export const RegisterPage: React.FC<RegisterPageProps> = ({ setActiveTab }) => {
-  const { register } = useAuth();
+  const { register, pendingEmail, setPendingEmail } = useAuth();
   const { language, t } = useLanguage();
 
   const [username, setUsername] = useState('');
@@ -25,6 +26,11 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ setActiveTab }) => {
     const res = await register(username, email, password, language);
     setLoading(false);
 
+    if (res.requireVerification) {
+      // Modal pops up automatically via pendingEmail
+      return;
+    }
+
     if (res.success) {
       setActiveTab('dashboard');
     } else {
@@ -34,6 +40,14 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ setActiveTab }) => {
 
   return (
     <div className="py-12 px-4 max-w-md mx-auto">
+      {pendingEmail && (
+        <VerifyEmailModal
+          email={pendingEmail}
+          onClose={() => setPendingEmail(null)}
+          onSuccess={() => setActiveTab('dashboard')}
+        />
+      )}
+
       <div className="p-8 rounded-3xl bg-[#0f1117] border border-indigo-500/20 shadow-2xl space-y-6">
         
         {/* Brand */}

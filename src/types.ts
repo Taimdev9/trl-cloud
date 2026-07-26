@@ -12,6 +12,17 @@ export interface User {
   avatar?: string;
   language: Language;
   createdAt: string;
+  isVerified?: boolean;
+}
+
+export interface BotErrorDiagnostic {
+  hasError: boolean;
+  errorType?: 'INVALID_TOKEN' | 'MISSING_PACKAGE' | 'SYNTAX_ERROR' | 'MISSING_MAIN_FILE' | 'GATEWAY_INTENTS' | 'RUNTIME_CRASH' | 'NONE';
+  title?: string;
+  description?: string;
+  suggestedFix?: string;
+  affectedFile?: string;
+  detectedLog?: string;
 }
 
 export interface BotFile {

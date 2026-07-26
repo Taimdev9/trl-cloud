@@ -3,6 +3,8 @@ import path from 'path';
 import fs from 'fs';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import nodemailer from 'nodemailer';
+import JSZip from 'jszip';
 import { createServer as createViteServer } from 'vite';
 
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
@@ -26,6 +28,9 @@ interface DBUser {
   avatar?: string;
   language: 'en' | 'ar' | 'fr';
   createdAt: string;
+  isVerified?: boolean;
+  verificationCode?: string;
+  verificationExpires?: string;
 }
 
 interface DBFile {
@@ -217,6 +222,143 @@ PREFIX=!
   }
 ];
 
+// Email sending helper
+async function sendVerificationEmail(email: string, code: string) {
+  const host = process.env.SMTP_HOST;
+  const port = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587;
+  const user = process.env.SMTP_USER;
+  const pass = process.env.SMTP_PASS;
+  const from = process.env.SMTP_FROM || '"TRL Cloud" <no-reply@trlcloud.com>';
+
+  console.log(`\n=============================================================`);
+  console.log(`[TRL EMAIL VERIFICATION CODE]`);
+  console.log(`Target Email: ${email}`);
+  console.log(`6-Digit Verification Code: ${code}`);
+  console.log(`Expires in: 15 minutes`);
+  console.log(`=============================================================\n`);
+
+  if (host && user && pass) {
+    try {
+      const transporter = nodemailer.createTransport({
+        host,
+        port,
+        secure: port === 465,
+        auth: { user, pass }
+      });
+
+      await transporter.sendMail({
+        from,
+        to: email,
+        subject: '🔐 TRL Cloud - Verify Your Account Code: ' + code,
+        html: `
+          <div style="font-family: Arial, sans-serif; background-color: #0b0f19; padding: 30px; color: #ffffff;">
+            <div style="max-width: 500px; margin: 0 auto; background-color: #111827; border-radius: 16px; padding: 24px; border: 1px solid #374151;">
+              <h2 style="color: #6366f1; margin-top: 0;">⚡ TRL Cloud Verification</h2>
+              <p style="color: #d1d5db; font-size: 14px;">Welcome to TRL Cloud! Enter the following 6-digit code to verify your email and activate your Discord bot hosting workspace:</p>
+              <div style="background-color: #1f2937; padding: 16px; border-radius: 12px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #10b981; margin: 20px 0;">
+                ${code}
+              </div>
+              <p style="color: #9ca3af; font-size: 12px;">This code expires in 15 minutes. If you did not create a TRL Cloud account, please ignore this message.</p>
+              <hr style="border: none; border-top: 1px solid #374151; margin: 20px 0;" />
+              <p style="color: #6b7280; font-size: 11px; text-align: center;">TRL TEAM FOR DEVELOPMENT &copy; 2026</p>
+            </div>
+          </div>
+        `
+      });
+      console.log(`[TRL Email Verification] Real SMTP email sent successfully to ${email}`);
+    } catch (err) {
+      console.error(`[TRL Email Verification] SMTP Email sending failed:`, err);
+    }
+  }
+}
+
+// Bot error diagnostics engine
+function analyzeProjectErrors(project: DBProject, logs: DBLog[]) {
+  // 1. Check BOT_TOKEN in envVars
+  const tokenVar = project.envVars?.find(e => e.key === 'BOT_TOKEN');
+  const tokenVal = tokenVar ? tokenVar.value.trim() : '';
+
+  if (!tokenVal || tokenVal === 'YOUR_BOT_TOKEN_HERE' || tokenVal === 'YOUR_DISCORD_BOT_TOKEN_HERE') {
+    return {
+      hasError: true,
+      errorType: 'INVALID_TOKEN' as const,
+      title: 'Missing or Default Discord BOT_TOKEN',
+      description: 'Your project environment variable BOT_TOKEN is set to the default placeholder. The bot cannot authenticate with Discord.',
+      suggestedFix: 'Copy your actual Discord Bot Token from Discord Developer Portal -> Bot -> Token, and save it in the Environment Secrets (.env) tab.',
+      affectedFile: '.env'
+    };
+  }
+
+  // 2. Check main file existence
+  const mainFileExists = project.files.some(f => f.path === project.mainFile);
+  if (!mainFileExists) {
+    return {
+      hasError: true,
+      errorType: 'MISSING_MAIN_FILE' as const,
+      title: `Main Entry File '${project.mainFile}' Not Found`,
+      description: `The bot execution failed because the configured main entry file '${project.mainFile}' does not exist in project files.`,
+      suggestedFix: `Create '${project.mainFile}' in the Code IDE or update project settings to point to an existing script file.`,
+      affectedFile: project.mainFile
+    };
+  }
+
+  // 3. Check recent logs for specific error traces
+  const recentLogs = logs.slice(-30);
+  const errorLog = recentLogs.slice().reverse().find(l => l.type === 'error' || l.message.toLowerCase().includes('error') || l.message.toLowerCase().includes('cannot find module'));
+
+  if (errorLog) {
+    const msg = errorLog.message;
+    if (msg.includes('Cannot find module') || msg.includes('ModuleNotFoundError') || msg.includes('No module named')) {
+      return {
+        hasError: true,
+        errorType: 'MISSING_PACKAGE' as const,
+        title: 'Missing Required Module or Dependency',
+        description: 'The bot process threw an unhandled exception because a required package is not installed.',
+        suggestedFix: 'Type `npm install <package>` or `pip install <package>` in the Live Console or add the library to package.json.',
+        detectedLog: msg
+      };
+    }
+
+    if (msg.includes('SyntaxError') || msg.includes('IndentationError') || msg.includes('Unexpected token')) {
+      return {
+        hasError: true,
+        errorType: 'SYNTAX_ERROR' as const,
+        title: 'Code Syntax Error',
+        description: 'The script interpreter encountered invalid code syntax during execution.',
+        suggestedFix: 'Open the Code IDE, check recent edits for missing closing brackets, quotes, or improper indentation, and re-save.',
+        detectedLog: msg
+      };
+    }
+
+    if (msg.includes('DisallowedGatewayIntents') || msg.includes('PrivilegedIntent') || msg.includes('10006')) {
+      return {
+        hasError: true,
+        errorType: 'GATEWAY_INTENTS' as const,
+        title: 'Disallowed Gateway Intents',
+        description: 'Your bot code requests privileged Gateway Intents (Message Content or Server Members) that are disabled in your Discord Developer App.',
+        suggestedFix: 'Go to Discord Developer Portal -> Applications -> [Your Bot] -> Bot -> Privileged Gateway Intents, and enable "Message Content Intent" and "Server Members Intent".',
+        detectedLog: msg
+      };
+    }
+
+    return {
+      hasError: true,
+      errorType: 'RUNTIME_CRASH' as const,
+      title: 'Bot Process Crash',
+      description: 'The bot process terminated due to an uncaught exception or crash signal.',
+      suggestedFix: 'Review the error trace in the Live Console, fix any API parameter errors, and click Restart.',
+      detectedLog: msg
+    };
+  }
+
+  return {
+    hasError: false,
+    errorType: 'NONE' as const,
+    title: 'No Active Errors Detected',
+    description: 'Bot configuration and process logs appear healthy.'
+  };
+}
+
 // Read / Write Database
 function getDB(): DatabaseSchema {
   if (!fs.existsSync(DB_FILE)) {
@@ -232,7 +374,8 @@ function getDB(): DatabaseSchema {
           passwordHash: adminPasswordHash,
           role: 'admin',
           language: 'en',
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          isVerified: true
         },
         {
           id: 'user-01',
@@ -241,7 +384,8 @@ function getDB(): DatabaseSchema {
           passwordHash: userPasswordHash,
           role: 'user',
           language: 'en',
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          isVerified: true
         }
       ],
       projects: [
@@ -494,7 +638,10 @@ async function startServer() {
       return res.status(400).json({ error: 'User with this email already exists' });
     }
 
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const verificationExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
     const passwordHash = await bcrypt.hash(password, 10);
+
     const newUser: DBUser = {
       id: 'usr-' + Date.now(),
       username,
@@ -502,7 +649,10 @@ async function startServer() {
       passwordHash,
       role: 'user',
       language: language || 'en',
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      isVerified: false,
+      verificationCode,
+      verificationExpires
     };
 
     db.users.push(newUser);
@@ -512,18 +662,89 @@ async function startServer() {
       id: 'notif-' + Date.now(),
       userId: newUser.id,
       title: 'Welcome to TRL Cloud',
-      message: 'Account created! Create your first Discord bot project or test our template bots.',
-      type: 'success',
+      message: 'Account created! Please verify your email code to activate bot hosting.',
+      type: 'info',
       read: false,
       timestamp: new Date().toISOString()
     });
 
     saveDB(db);
 
-    const token = jwt.sign({ userId: newUser.id, role: newUser.role }, JWT_SECRET, { expiresIn: '7d' });
-    const { passwordHash: _, ...safeUser } = newUser;
+    // Send verification code email/log
+    await sendVerificationEmail(newUser.email, verificationCode);
 
-    res.json({ token, user: safeUser });
+    res.json({
+      requireVerification: true,
+      email: newUser.email,
+      message: 'Registration successful! A 6-digit verification code has been sent to your email.',
+      codeForDemo: verificationCode
+    });
+  });
+
+  // Auth: Verify Email Code
+  app.post('/api/auth/verify-email', async (req, res) => {
+    const { email, code } = req.body;
+    if (!email || !code) {
+      return res.status(400).json({ error: 'Email and verification code are required' });
+    }
+
+    const db = getDB();
+    const user = db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (user.isVerified) {
+      const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+      const { passwordHash: _, verificationCode: __, verificationExpires: ___, ...safeUser } = user;
+      return res.json({ token, user: safeUser, message: 'Account is already verified!' });
+    }
+
+    if (!user.verificationCode || user.verificationCode !== String(code).trim()) {
+      return res.status(400).json({ error: 'Invalid 6-digit verification code' });
+    }
+
+    if (user.verificationExpires && new Date(user.verificationExpires) < new Date()) {
+      return res.status(400).json({ error: 'Verification code has expired. Please click Resend Code.' });
+    }
+
+    user.isVerified = true;
+    delete user.verificationCode;
+    delete user.verificationExpires;
+    saveDB(db);
+
+    const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+    const { passwordHash: _, verificationCode: __, verificationExpires: ___, ...safeUser } = user;
+
+    res.json({ token, user: safeUser, message: 'Email verified successfully! Welcome to TRL Cloud.' });
+  });
+
+  // Auth: Resend Code
+  app.post('/api/auth/resend-code', async (req, res) => {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const db = getDB();
+    const user = db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const verificationExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+
+    user.verificationCode = verificationCode;
+    user.verificationExpires = verificationExpires;
+    saveDB(db);
+
+    await sendVerificationEmail(user.email, verificationCode);
+
+    res.json({
+      message: 'New 6-digit verification code sent successfully!',
+      codeForDemo: verificationCode
+    });
   });
 
   // Auth: Login
@@ -548,8 +769,25 @@ async function startServer() {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
+    // Check if verified
+    if (user.isVerified === false) {
+      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+      user.verificationCode = verificationCode;
+      user.verificationExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+      saveDB(db);
+
+      await sendVerificationEmail(user.email, verificationCode);
+
+      return res.status(403).json({
+        requireVerification: true,
+        email: user.email,
+        error: 'Email verification required. A 6-digit code has been sent to your email.',
+        codeForDemo: verificationCode
+      });
+    }
+
     const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-    const { passwordHash: _, ...safeUser } = user;
+    const { passwordHash: _, verificationCode: __, verificationExpires: ___, ...safeUser } = user;
 
     res.json({ token, user: safeUser });
   });
@@ -822,6 +1060,75 @@ async function startServer() {
     }
 
     res.json({ message: 'Command executed' });
+  });
+
+  // Projects: Error Diagnostics
+  app.get('/api/projects/:id/diagnostics', authenticateJWT, (req, res) => {
+    const { id } = req.params;
+    const db = getDB();
+    const proj = db.projects.find(p => p.id === id);
+    if (!proj) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const logs = db.logs[id] || [];
+    const diagnostic = analyzeProjectErrors(proj, logs);
+    res.json({ diagnostic });
+  });
+
+  // Projects: Download Backup ZIP
+  app.get('/api/projects/:id/backup', authenticateJWT, async (req, res) => {
+    const { id } = req.params;
+    const user = (req as any).user;
+    const db = getDB();
+
+    const proj = db.projects.find(p => p.id === id);
+    if (!proj) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    if (user.role !== 'admin' && proj.userId !== user.userId) {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    try {
+      const zip = new JSZip();
+
+      // Add code files
+      proj.files.forEach(f => {
+        if (!f.isDirectory) {
+          zip.file(f.path, f.content);
+        }
+      });
+
+      // Add .env file if envVars exist
+      if (proj.envVars && proj.envVars.length > 0) {
+        const envContent = proj.envVars.map(e => `${e.key}=${e.value}`).join('\n');
+        zip.file('.env', envContent);
+      }
+
+      // Add metadata manifest
+      const manifest = {
+        name: proj.name,
+        description: proj.description,
+        language: proj.language,
+        mainFile: proj.mainFile,
+        exportedAt: new Date().toISOString(),
+        platform: 'TRL Cloud',
+        author: 'TRL TEAM FOR DEVELOPMENT'
+      };
+      zip.file('trl-manifest.json', JSON.stringify(manifest, null, 2));
+
+      const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' });
+
+      const safeName = proj.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Disposition', `attachment; filename="${safeName}_backup.zip"`);
+      res.send(zipBuffer);
+    } catch (err) {
+      console.error('Backup ZIP generation error:', err);
+      res.status(500).json({ error: 'Failed to generate project backup ZIP' });
+    }
   });
 
   // Bot Templates API
