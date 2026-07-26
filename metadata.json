@@ -1,0 +1,6 @@
+{
+  "name": "TRL Cloud",
+  "description": "Discord Bot Hosting Platform by TRL TEAM FOR DEVELOPMENT - Create, upload, manage, edit, and host Node.js and Python Discord bots.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
