@@ -48,7 +48,6 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ setActiveTab }) => {
     setGoogleLoading(true);
     setError(null);
 
-    // Simulate Google account chooser / OAuth prompt
     const mockGoogleProfile = {
       email: email.trim() ? email.trim() : `user${Math.floor(1000 + Math.random() * 9000)}@gmail.com`,
       name: username.trim() ? username.trim() : 'Google User',
@@ -67,20 +66,20 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ setActiveTab }) => {
 
   return (
     <div className="py-12 px-4 max-w-md mx-auto">
-      <div className="p-8 rounded-3xl bg-[#0f1117] border border-indigo-500/20 shadow-2xl space-y-6">
+      <div className="p-8 rounded-3xl bg-slate-900 border border-cyan-500/20 shadow-2xl space-y-6">
         
         {/* Brand Header */}
         <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center mx-auto shadow-lg shadow-indigo-500/30">
-            <Server className="w-6 h-6 text-white" />
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-400 to-sky-500 flex items-center justify-center mx-auto shadow-lg shadow-cyan-500/20">
+            <Server className="w-6 h-6 text-slate-950 font-bold" />
           </div>
           <h1 className="text-xl font-extrabold text-white">{t('registerTitle')}</h1>
           <p className="text-xs text-slate-400">Deploy & host your Node.js and Python Discord bots</p>
         </div>
 
         {error && (
-          <div className="p-3.5 rounded-xl bg-red-950/50 border border-red-500/30 text-red-300 text-xs flex items-center gap-2.5 animate-fadeIn">
-            <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
+          <div className="p-3.5 rounded-xl bg-rose-950/50 border border-rose-500/30 text-rose-300 text-xs flex items-center gap-2.5 animate-fadeIn">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
             <span>{error}</span>
           </div>
         )}
@@ -90,10 +89,10 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ setActiveTab }) => {
           type="button"
           onClick={handleGoogleSignIn}
           disabled={googleLoading || loading}
-          className="w-full py-2.5 px-4 rounded-xl font-semibold text-xs text-slate-200 bg-slate-900 hover:bg-slate-800 border border-slate-700/80 transition-all flex items-center justify-center gap-3 shadow-md active:scale-[0.99]"
+          className="w-full py-2.5 px-4 rounded-xl font-semibold text-xs text-slate-200 bg-slate-950 hover:bg-slate-800 border border-slate-700/80 transition-all flex items-center justify-center gap-3 shadow-md active:scale-[0.99]"
         >
           {googleLoading ? (
-            <Loader2 className="w-4 h-4 animate-spin text-indigo-400" />
+            <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />
           ) : (
             <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
               <path
@@ -114,18 +113,16 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ setActiveTab }) => {
               />
             </svg>
           )}
-          <span>Continue with Google</span>
+          <span>Quick Sign Up with Google</span>
         </button>
 
-        {/* Divider */}
         <div className="relative flex items-center justify-center my-4">
           <div className="border-t border-slate-800 w-full" />
-          <span className="bg-[#0f1117] px-3 text-[10px] uppercase font-bold text-slate-500 tracking-wider">
-            OR REGISTER WITH EMAIL
+          <span className="bg-slate-900 px-3 text-[10px] uppercase font-bold text-slate-500 tracking-wider">
+            OR CREATE EMAIL ACCOUNT
           </span>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleFormSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-300 mb-1">{t('usernameLabel')}</label>
@@ -136,8 +133,8 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ setActiveTab }) => {
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="DeveloperTag"
-                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                placeholder="DeveloperName"
+                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-500"
               />
             </div>
           </div>
@@ -151,8 +148,8 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ setActiveTab }) => {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="your@email.com"
-                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                placeholder="developer@trlcloud.com"
+                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-500"
               />
             </div>
           </div>
@@ -167,47 +164,54 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ setActiveTab }) => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                className="w-full pl-10 pr-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-cyan-500"
               />
             </div>
           </div>
 
-          {/* Terms & Privacy Policy Checkbox (Clean modern design) */}
-          <div 
-            onClick={() => setAgreedToTerms(!agreedToTerms)}
-            className={`p-3 rounded-xl border transition-all cursor-pointer flex items-start gap-3 select-none ${
-              agreedToTerms 
-                ? 'bg-indigo-950/30 border-indigo-500/50 text-slate-200' 
-                : 'bg-slate-900/60 border-slate-800 text-slate-400 hover:border-slate-700'
-            }`}
-          >
-            <div className={`mt-0.5 w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 transition-colors ${
-              agreedToTerms ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-slate-700 bg-slate-950'
-            }`}>
-              {agreedToTerms && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-            </div>
-            <div className="text-xs leading-relaxed">
-              <span>I agree to the </span>
-              <span className="text-indigo-400 font-semibold underline hover:text-indigo-300">Terms of Service</span>
-              <span> and </span>
-              <span className="text-indigo-400 font-semibold underline hover:text-indigo-300">Privacy Policy</span>.
-            </div>
+          {/* Terms checkbox */}
+          <div className="flex items-start gap-2.5 pt-1">
+            <input
+              type="checkbox"
+              id="terms"
+              checked={agreedToTerms}
+              onChange={(e) => setAgreedToTerms(e.target.checked)}
+              className="mt-0.5 rounded bg-slate-950 border-slate-800 text-cyan-400 focus:ring-cyan-500/20"
+            />
+            <label htmlFor="terms" className="text-[11px] text-slate-400 leading-relaxed cursor-pointer">
+              I agree to TRL Cloud{' '}
+              <button
+                type="button"
+                onClick={() => setActiveTab('terms')}
+                className="text-cyan-400 underline font-semibold"
+              >
+                Terms of Service
+              </button>{' '}
+              and{' '}
+              <button
+                type="button"
+                onClick={() => setActiveTab('privacy')}
+                className="text-cyan-400 underline font-semibold"
+              >
+                Privacy Policy
+              </button>.
+            </label>
           </div>
 
           <button
             type="submit"
-            disabled={loading || !agreedToTerms}
-            className="w-full py-2.5 rounded-xl font-bold text-xs text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 transition-all shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2"
+            disabled={loading}
+            className="w-full py-2.5 rounded-xl font-bold text-xs text-slate-950 bg-cyan-400 hover:bg-cyan-300 disabled:opacity-50 transition-colors shadow-lg shadow-cyan-500/20 flex items-center justify-center gap-2"
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
-            <span>Create Account</span>
+            {loading ? <Loader2 className="w-4 h-4 animate-spin text-slate-950" /> : <ArrowRight className="w-4 h-4 text-slate-950" />}
+            <span>{t('createAccountBtn')}</span>
           </button>
         </form>
 
         <div className="text-center pt-2">
           <button
             onClick={() => setActiveTab('login')}
-            className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold"
+            className="text-xs text-cyan-400 hover:text-cyan-300 font-semibold"
           >
             {t('alreadyHaveAccount')}
           </button>

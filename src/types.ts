@@ -1,4 +1,4 @@
-export type Language = 'en' | 'ar' | 'fr' | 'tr';
+export type Language = 'en' | 'ar' | 'fr' | 'tr' | 'es';
 
 export type BotLanguage = 'nodejs' | 'python' | 'java' | 'csharp';
 

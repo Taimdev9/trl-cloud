@@ -55,7 +55,7 @@ export const InitialSplashScreen: React.FC<{ onComplete: () => void }> = ({ onCo
           TRL CLOUD
         </h1>
         <p className="text-xs text-slate-400 font-mono tracking-wider uppercase">
-          Discord Bot Hosting & Developer Suite • V1.3
+          Discord Bot Hosting & Developer Suite • V1.4
         </p>
       </div>
 

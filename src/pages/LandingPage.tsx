@@ -36,14 +36,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setActiveTab, onOpenCr
       <section className="relative pt-12 pb-16 px-4 sm:px-6 lg:px-8 overflow-hidden">
         
         {/* Glow Effects */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-indigo-600/15 blur-[120px] rounded-full pointer-events-none"></div>
-        <div className="absolute top-1/3 right-10 w-[300px] h-[300px] bg-purple-600/15 blur-[100px] rounded-full pointer-events-none"></div>
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-cyan-500/10 blur-[120px] rounded-full pointer-events-none"></div>
+        <div className="absolute top-1/3 right-10 w-[300px] h-[300px] bg-sky-500/10 blur-[100px] rounded-full pointer-events-none"></div>
 
         <div className="max-w-5xl mx-auto text-center space-y-8 relative z-10">
           
           {/* Developed By Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/90 border border-indigo-500/30 text-xs font-semibold text-indigo-300 shadow-xl">
-            <span className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/90 border border-cyan-500/30 text-xs font-semibold text-cyan-300 shadow-xl">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
             <span>Created by <strong className="text-white">TRL TEAM FOR DEVELOPMENT</strong></span>
           </div>
 
@@ -67,10 +67,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setActiveTab, onOpenCr
                   setActiveTab('register');
                 }
               }}
-              className="px-6 py-3.5 rounded-2xl text-sm font-bold text-white bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 shadow-xl shadow-indigo-600/30 flex items-center gap-2 transition-all transform hover:-translate-y-0.5 active:scale-95"
+              className="px-6 py-3.5 rounded-2xl text-sm font-bold text-slate-950 bg-gradient-to-r from-cyan-400 via-sky-400 to-teal-300 hover:from-cyan-300 hover:to-teal-200 shadow-xl shadow-cyan-500/20 flex items-center gap-2 transition-all transform hover:-translate-y-0.5 active:scale-95"
             >
               <span>{t('getStartedFree')}</span>
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-4 h-4 text-slate-950" />
             </button>
 
             <button
@@ -84,16 +84,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setActiveTab, onOpenCr
 
           {/* Live Metrics Grid */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 pt-10 max-w-3xl mx-auto">
-            <div className="p-4 rounded-2xl bg-slate-900/60 border border-indigo-500/15 backdrop-blur-md">
+            <div className="p-4 rounded-2xl bg-slate-900/60 border border-cyan-500/15 backdrop-blur-md">
               <p className="text-2xl font-black text-white">12,450+</p>
               <p className="text-xs text-slate-400 font-medium">{t('activeBotsCount')}</p>
             </div>
-            <div className="p-4 rounded-2xl bg-slate-900/60 border border-indigo-500/15 backdrop-blur-md">
+            <div className="p-4 rounded-2xl bg-slate-900/60 border border-cyan-500/15 backdrop-blur-md">
               <p className="text-2xl font-black text-emerald-400">99.98%</p>
               <p className="text-xs text-slate-400 font-medium">{t('uptimePercent')}</p>
             </div>
-            <div className="p-4 rounded-2xl bg-slate-900/60 border border-indigo-500/15 backdrop-blur-md col-span-2 md:col-span-1">
-              <p className="text-2xl font-black text-purple-400">3,800+</p>
+            <div className="p-4 rounded-2xl bg-slate-900/60 border border-cyan-500/15 backdrop-blur-md col-span-2 md:col-span-1">
+              <p className="text-2xl font-black text-cyan-400">3,800+</p>
               <p className="text-xs text-slate-400 font-medium">{t('registeredUsersCount')}</p>
             </div>
           </div>
@@ -104,7 +104,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setActiveTab, onOpenCr
       {/* 4 Bot Upload Methods Showcase */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center space-y-3 mb-12">
-          <span className="text-xs font-bold uppercase tracking-widest text-indigo-400">Multi-Method Bot Deployment</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-cyan-400">Multi-Method Bot Deployment</span>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white">Multiple Ways To Add Your Bot</h2>
           <p className="text-xs sm:text-sm text-slate-400 max-w-xl mx-auto">
             Whether you have a local ZIP file, a GitHub repository, or want to write code right inside your browser, TRL Cloud supports it all.
@@ -114,8 +114,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setActiveTab, onOpenCr
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           
           {/* Method 1 */}
-          <div className="p-6 rounded-3xl bg-[#0f1117] border border-indigo-500/20 hover:border-indigo-500/40 transition-all hover:-translate-y-1 group">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+          <div className="p-6 rounded-3xl bg-slate-900 border border-cyan-500/20 hover:border-cyan-500/40 transition-all hover:-translate-y-1 group">
+            <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <UploadCloud className="w-6 h-6" />
             </div>
             <h3 className="text-base font-bold text-white mb-2">{t('featureZipTitle')}</h3>
@@ -125,8 +125,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setActiveTab, onOpenCr
           </div>
 
           {/* Method 2 */}
-          <div className="p-6 rounded-3xl bg-[#0f1117] border border-indigo-500/20 hover:border-indigo-500/40 transition-all hover:-translate-y-1 group">
-            <div className="w-12 h-12 rounded-2xl bg-purple-600/20 text-purple-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+          <div className="p-6 rounded-3xl bg-slate-900 border border-cyan-500/20 hover:border-cyan-500/40 transition-all hover:-translate-y-1 group">
+            <div className="w-12 h-12 rounded-2xl bg-sky-500/20 text-sky-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <Code2 className="w-6 h-6" />
             </div>
             <h3 className="text-base font-bold text-white mb-2">{t('featureEditorTitle')}</h3>
@@ -136,8 +136,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setActiveTab, onOpenCr
           </div>
 
           {/* Method 3 */}
-          <div className="p-6 rounded-3xl bg-[#0f1117] border border-indigo-500/20 hover:border-indigo-500/40 transition-all hover:-translate-y-1 group">
-            <div className="w-12 h-12 rounded-2xl bg-blue-600/20 text-blue-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+          <div className="p-6 rounded-3xl bg-slate-900 border border-cyan-500/20 hover:border-cyan-500/40 transition-all hover:-translate-y-1 group">
+            <div className="w-12 h-12 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <Github className="w-6 h-6" />
             </div>
             <h3 className="text-base font-bold text-white mb-2">{t('featureGitTitle')}</h3>
@@ -147,8 +147,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setActiveTab, onOpenCr
           </div>
 
           {/* Method 4 */}
-          <div className="p-6 rounded-3xl bg-[#0f1117] border border-indigo-500/20 hover:border-indigo-500/40 transition-all hover:-translate-y-1 group">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+          <div className="p-6 rounded-3xl bg-slate-900 border border-cyan-500/20 hover:border-cyan-500/40 transition-all hover:-translate-y-1 group">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
               <Terminal className="w-6 h-6" />
             </div>
             <h3 className="text-base font-bold text-white mb-2">{t('featureLogsTitle')}</h3>
@@ -162,9 +162,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setActiveTab, onOpenCr
 
       {/* Languages & Frameworks Banner */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950/60 to-slate-900 border border-indigo-500/20 flex flex-col md:flex-row items-center justify-between gap-8">
+        <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-r from-slate-900 via-slate-900/90 to-cyan-950/40 border border-cyan-500/20 flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="space-y-3 text-center md:text-left">
-            <span className="text-xs font-bold uppercase tracking-wider text-indigo-400">Supported Languages</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-cyan-400">Supported Languages</span>
             <h3 className="text-2xl font-extrabold text-white">JavaScript & Python Discord Bots</h3>
             <p className="text-xs text-slate-300 max-w-md">
               Full automated environment setup with dependency installers (package.json & requirements.txt).
@@ -201,11 +201,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setActiveTab, onOpenCr
 
       {/* Creator Highlight & Discord Banner */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-tr from-indigo-950/80 via-slate-900 to-purple-950/80 border border-indigo-500/30 relative overflow-hidden text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-8">
+        <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-tr from-slate-900 via-slate-900 to-cyan-950/60 border border-cyan-500/30 relative overflow-hidden text-center sm:text-left flex flex-col sm:flex-row items-center justify-between gap-8">
           
           <div className="space-y-4 max-w-xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold border border-indigo-500/30">
-              <ShieldCheck className="w-4 h-4 text-indigo-400" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-bold border border-cyan-500/30">
+              <ShieldCheck className="w-4 h-4 text-cyan-400" />
               <span>Official Development Team</span>
             </div>
 
@@ -237,8 +237,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setActiveTab, onOpenCr
             </div>
           </div>
 
-          <div className="w-32 h-32 rounded-3xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center shadow-2xl shadow-indigo-500/30 shrink-0 rotate-3">
-            <Server className="w-16 h-16 text-white" />
+          <div className="w-32 h-32 rounded-3xl bg-gradient-to-tr from-cyan-500 to-sky-500 flex items-center justify-center shadow-2xl shadow-cyan-500/20 shrink-0 rotate-3">
+            <Server className="w-16 h-16 text-slate-950 font-bold" />
           </div>
 
         </div>
@@ -252,24 +252,24 @@ export const LandingPage: React.FC<LandingPageProps> = ({ setActiveTab, onOpenCr
         </div>
 
         <div className="space-y-4">
-          <div className="p-5 rounded-2xl bg-[#0f1117] border border-slate-800">
+          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800">
             <h4 className="text-sm font-bold text-white mb-1.5">How do I get my Discord Bot Token?</h4>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Visit the Discord Developer Portal (discord.com/developers), create an Application, click "Bot", and copy the token. Paste it into your TRL Cloud project Environment Variables as <code className="text-indigo-300 bg-slate-900 px-1 py-0.5 rounded">BOT_TOKEN</code>.
+              Visit the Discord Developer Portal (discord.com/developers), create an Application, click "Bot", and copy the token. Paste it into your TRL Cloud project Environment Variables as <code className="text-cyan-300 bg-slate-950 px-1 py-0.5 rounded">BOT_TOKEN</code>.
             </p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-[#0f1117] border border-slate-800">
+          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800">
             <h4 className="text-sm font-bold text-white mb-1.5">Can I host Python and Node.js bots at the same time?</h4>
             <p className="text-xs text-slate-400 leading-relaxed">
               Yes! TRL Cloud allows you to create unlimited test projects in both Node.js (Discord.js v14) and Python (discord.py).
             </p>
           </div>
 
-          <div className="p-5 rounded-2xl bg-[#0f1117] border border-slate-800">
+          <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800">
             <h4 className="text-sm font-bold text-white mb-1.5">Are dependencies installed automatically?</h4>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Yes. When you upload a ZIP or import from GitHub, TRL Cloud detects <code className="text-indigo-300 bg-slate-900 px-1 py-0.5 rounded">package.json</code> or <code className="text-indigo-300 bg-slate-900 px-1 py-0.5 rounded">requirements.txt</code> and installs required packages automatically.
+              Yes. When you upload a ZIP or import from GitHub, TRL Cloud detects <code className="text-cyan-300 bg-slate-950 px-1 py-0.5 rounded">package.json</code> or <code className="text-cyan-300 bg-slate-950 px-1 py-0.5 rounded">requirements.txt</code> and installs required packages automatically.
             </p>
           </div>
         </div>

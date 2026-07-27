@@ -87,9 +87,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveTab, setS
     <div className="space-y-8 pb-12">
       
       {/* Top Welcome Banner */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950/50 to-slate-900 border border-indigo-500/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-2xl">
+      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-slate-900 via-slate-900/90 to-cyan-950/40 border border-cyan-500/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-2xl">
         <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 text-xs font-bold border border-indigo-500/30">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-300 text-xs font-bold border border-cyan-500/30">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             <span>TRL Cloud Hosting Engine Active</span>
           </div>
@@ -104,9 +104,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveTab, setS
         <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={onOpenCreateModal}
-            className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition-all"
+            className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-950 bg-gradient-to-r from-cyan-400 to-sky-400 hover:from-cyan-300 hover:to-sky-300 shadow-lg shadow-cyan-500/20 flex items-center gap-2 transition-all"
           >
-            <PlusCircle className="w-4 h-4" />
+            <PlusCircle className="w-4 h-4 text-slate-950" />
             <span>{t('createBotTitle')}</span>
           </button>
           
@@ -114,7 +114,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveTab, setS
             onClick={() => setActiveTab('editor')}
             className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-300 bg-slate-900 border border-slate-800 hover:bg-slate-800 transition-colors flex items-center gap-2"
           >
-            <Code2 className="w-4 h-4 text-indigo-400" />
+            <Code2 className="w-4 h-4 text-cyan-400" />
             <span>{t('navCodeEditor')}</span>
           </button>
         </div>
@@ -123,42 +123,42 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveTab, setS
       {/* Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         
-        <div className="p-5 rounded-2xl bg-[#0f1117] border border-indigo-500/15 shadow-xl flex items-center justify-between">
+        <div className="p-5 rounded-2xl bg-slate-900 border border-cyan-500/15 shadow-xl flex items-center justify-between">
           <div>
             <p className="text-xs text-slate-400 font-medium">Total Bot Projects</p>
             <p className="text-2xl font-black text-white mt-1">{projects.length}</p>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
             <Bot className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-[#0f1117] border border-indigo-500/15 shadow-xl flex items-center justify-between">
+        <div className="p-5 rounded-2xl bg-slate-900 border border-cyan-500/15 shadow-xl flex items-center justify-between">
           <div>
             <p className="text-xs text-slate-400 font-medium">Active Online Bots</p>
             <p className="text-2xl font-black text-emerald-400 mt-1">{activeBots}</p>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-emerald-600/20 text-emerald-400 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
             <Activity className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-[#0f1117] border border-indigo-500/15 shadow-xl flex items-center justify-between">
+        <div className="p-5 rounded-2xl bg-slate-900 border border-cyan-500/15 shadow-xl flex items-center justify-between">
           <div>
             <p className="text-xs text-slate-400 font-medium">RAM Allocation</p>
-            <p className="text-2xl font-black text-purple-400 mt-1">{totalRam.toFixed(0)} MB</p>
+            <p className="text-2xl font-black text-cyan-300 mt-1">{totalRam.toFixed(0)} MB</p>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-purple-600/20 text-purple-400 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-2xl bg-sky-500/20 text-sky-400 flex items-center justify-center">
             <HardDrive className="w-6 h-6" />
           </div>
         </div>
 
-        <div className="p-5 rounded-2xl bg-[#0f1117] border border-indigo-500/15 shadow-xl flex items-center justify-between">
+        <div className="p-5 rounded-2xl bg-slate-900 border border-cyan-500/15 shadow-xl flex items-center justify-between">
           <div>
             <p className="text-xs text-slate-400 font-medium">Node Uptime</p>
             <p className="text-2xl font-black text-blue-400 mt-1">99.98%</p>
           </div>
-          <div className="w-12 h-12 rounded-2xl bg-blue-600/20 text-blue-400 flex items-center justify-center">
+          <div className="w-12 h-12 rounded-2xl bg-blue-500/20 text-blue-400 flex items-center justify-center">
             <Cpu className="w-6 h-6" />
           </div>
         </div>
@@ -172,12 +172,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveTab, setS
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Bot className="w-5 h-5 text-indigo-400" />
+            <Bot className="w-5 h-5 text-cyan-400" />
             <h2 className="text-base font-extrabold text-white">Your Discord Bots</h2>
           </div>
           <button
             onClick={() => setActiveTab('bots')}
-            className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 flex items-center gap-1"
+            className="text-xs font-semibold text-cyan-400 hover:text-cyan-300 flex items-center gap-1"
           >
             <span>View All ({projects.length})</span>
             <ExternalLink className="w-3.5 h-3.5" />
@@ -186,12 +186,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveTab, setS
 
         {loading ? (
           <div className="p-12 text-center text-slate-500 text-xs">
-            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-indigo-400" />
+            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-cyan-400" />
             <span>Loading bot projects...</span>
           </div>
         ) : projects.length === 0 ? (
-          <div className="p-10 rounded-3xl bg-[#0f1117] border border-slate-800 text-center space-y-4">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mx-auto">
+          <div className="p-10 rounded-3xl bg-slate-900 border border-slate-800 text-center space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center mx-auto">
               <Bot className="w-6 h-6" />
             </div>
             <div>
@@ -202,9 +202,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveTab, setS
             </div>
             <button
               onClick={onOpenCreateModal}
-              className="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition-colors inline-flex items-center gap-2 shadow-lg shadow-indigo-600/20"
+              className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-950 bg-cyan-400 hover:bg-cyan-300 transition-colors inline-flex items-center gap-2 shadow-lg shadow-cyan-500/20"
             >
-              <PlusCircle className="w-4 h-4" />
+              <PlusCircle className="w-4 h-4 text-slate-950" />
               <span>Create Your First Bot</span>
             </button>
           </div>
@@ -213,18 +213,18 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveTab, setS
             {projects.map((bot) => (
               <div
                 key={bot.id}
-                className="p-5 rounded-2xl bg-[#0f1117] border border-indigo-500/15 hover:border-indigo-500/30 transition-all space-y-4 flex flex-col justify-between"
+                className="p-5 rounded-2xl bg-slate-900 border border-cyan-500/15 hover:border-cyan-500/30 transition-all space-y-4 flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-indigo-400 font-bold text-base shrink-0">
+                      <div className="w-10 h-10 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-cyan-400 font-bold text-base shrink-0">
                         {bot.language === 'python' ? '🐍' : '⚡'}
                       </div>
                       <div>
                         <h3 
                           onClick={() => { setSelectedBotId(bot.id); setActiveTab('bot-detail'); }}
-                          className="font-extrabold text-sm text-white hover:text-indigo-400 cursor-pointer transition-colors"
+                          className="font-extrabold text-sm text-white hover:text-cyan-400 cursor-pointer transition-colors"
                         >
                           {bot.name}
                         </h3>
@@ -291,7 +291,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveTab, setS
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => { setSelectedBotId(bot.id); setActiveTab('bot-detail'); }}
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 hover:bg-indigo-600/50 transition-colors flex items-center gap-1"
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/40 transition-colors flex items-center gap-1"
                     >
                       <Terminal className="w-3.5 h-3.5" />
                       <span>Console</span>
@@ -299,7 +299,7 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveTab, setS
 
                     <button
                       onClick={() => { setSelectedBotId(bot.id); setActiveTab('editor'); }}
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-slate-300 border border-slate-800 hover:bg-slate-800 transition-colors flex items-center gap-1"
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-950 text-slate-300 border border-slate-800 hover:bg-slate-800 transition-colors flex items-center gap-1"
                     >
                       <Code2 className="w-3.5 h-3.5" />
                       <span>Edit</span>
@@ -316,13 +316,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveTab, setS
       {/* Cloud Infrastructure Nodes */}
       <div className="space-y-4 pt-4">
         <h2 className="text-base font-extrabold text-white flex items-center gap-2">
-          <Activity className="w-4 h-4 text-indigo-400" />
+          <Activity className="w-4 h-4 text-cyan-400" />
           <span>TRL Cloud Infrastructure Nodes</span>
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {nodes.map((node) => (
-            <div key={node.id} className="p-4 rounded-2xl bg-[#0f1117] border border-slate-800 space-y-3">
+            <div key={node.id} className="p-4 rounded-2xl bg-slate-900 border border-slate-800 space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{node.flag}</span>

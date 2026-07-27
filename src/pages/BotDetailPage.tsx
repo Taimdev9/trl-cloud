@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
-import { BotProject, LogEntry, EnvVariable, BotErrorDiagnostic } from '../types';
+import { useToast } from '../context/ToastContext';
+import { BotProject, LogEntry, EnvVariable, BotErrorDiagnostic, BotFile } from '../types';
+import JSZip from 'jszip';
 import { 
   Play, 
   Square, 
@@ -23,6 +25,7 @@ import {
   Clock, 
   Send,
   Download,
+  UploadCloud,
   Wrench,
   ShieldAlert,
   FileCode,
@@ -39,6 +42,7 @@ interface BotDetailPageProps {
 export const BotDetailPage: React.FC<BotDetailPageProps> = ({ botId, setActiveTab }) => {
   const { getAuthHeader } = useAuth();
   const { t } = useLanguage();
+  const { showToast } = useToast();
 
   const [project, setProject] = useState<BotProject | null>(null);
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -50,12 +54,15 @@ export const BotDetailPage: React.FC<BotDetailPageProps> = ({ botId, setActiveTa
   const [loading, setLoading] = useState(true);
   const [savingEnv, setSavingEnv] = useState(false);
   const [envSaveMsg, setEnvSaveMsg] = useState<string | null>(null);
+  const [restoring, setRestoring] = useState(false);
 
   // AI Error Assistant State
   const [showAiModal, setShowAiModal] = useState(false);
   const [aiUserQuery, setAiUserQuery] = useState('');
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
+
+  const restoreInputRef = useRef<HTMLInputElement>(null);
 
   const fetchAiAnalysis = async (query?: string) => {
     setAiLoading(true);
@@ -74,6 +81,7 @@ export const BotDetailPage: React.FC<BotDetailPageProps> = ({ botId, setActiveTa
       }
     } catch (err) {
       console.error('Failed to run AI Assistant:', err);
+      showToast('AI Assistant connection failed.', 'error');
     } finally {
       setAiLoading(false);
     }
@@ -135,6 +143,7 @@ export const BotDetailPage: React.FC<BotDetailPageProps> = ({ botId, setActiveTa
 
   const handleDownloadBackup = async () => {
     try {
+      showToast('Generating project ZIP backup...', 'info');
       const res = await fetch(`/api/projects/${botId}/backup`, { headers: getAuthHeader() });
       if (res.ok) {
         const blob = await res.blob();
@@ -146,9 +155,71 @@ export const BotDetailPage: React.FC<BotDetailPageProps> = ({ botId, setActiveTa
         a.click();
         a.remove();
         window.URL.revokeObjectURL(url);
+        showToast('Backup ZIP downloaded successfully!', 'success');
+      } else {
+        showToast('Failed to generate backup ZIP.', 'error');
       }
     } catch (err) {
       console.error('Failed to download backup ZIP:', err);
+      showToast('Backup download failed.', 'error');
+    }
+  };
+
+  const handleRestoreBackup = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !project) return;
+
+    if (file.size > 25 * 1024 * 1024) {
+      showToast('Backup ZIP exceeds 25MB limit.', 'error');
+      return;
+    }
+
+    setRestoring(true);
+    showToast('Extracting and validating backup ZIP...', 'info');
+
+    try {
+      const zip = new JSZip();
+      const zipContent = await zip.loadAsync(file);
+      const extractedFiles: BotFile[] = [];
+
+      for (const [filename, fileObj] of Object.entries(zipContent.files)) {
+        if (!fileObj.dir && !filename.startsWith('__MACOSX')) {
+          const content = await fileObj.async('string');
+          extractedFiles.push({ path: filename, content });
+        }
+      }
+
+      if (extractedFiles.length === 0) {
+        showToast('ZIP file is empty or corrupted.', 'error');
+        setRestoring(false);
+        return;
+      }
+
+      // Update project via API
+      const res = await fetch(`/api/projects/${botId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...getAuthHeader()
+        },
+        body: JSON.stringify({
+          files: extractedFiles
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setProject(data.project);
+        showToast(`Restored ${extractedFiles.length} files from backup successfully!`, 'success');
+      } else {
+        showToast('Failed to save restored backup to project.', 'error');
+      }
+    } catch (err: any) {
+      console.error('Failed to restore backup:', err);
+      showToast('Restore error: ' + (err.message || 'Corrupted ZIP'), 'error');
+    } finally {
+      setRestoring(false);
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -160,14 +231,21 @@ export const BotDetailPage: React.FC<BotDetailPageProps> = ({ botId, setActiveTa
 
   const handleBotAction = async (action: 'start' | 'stop' | 'restart') => {
     try {
-      await fetch(`/api/projects/${botId}/${action}`, {
+      showToast(`Executing bot ${action}...`, 'info');
+      const res = await fetch(`/api/projects/${botId}/${action}`, {
         method: 'POST',
         headers: getAuthHeader()
       });
+      if (res.ok) {
+        showToast(`Bot ${action} command sent successfully!`, 'success');
+      } else {
+        showToast(`Failed to ${action} bot.`, 'error');
+      }
       fetchBotDetails();
       fetchLogs();
     } catch (err) {
       console.error(`Failed to ${action} bot:`, err);
+      showToast(`Network error during ${action}.`, 'error');
     }
   };
 
@@ -236,10 +314,14 @@ export const BotDetailPage: React.FC<BotDetailPageProps> = ({ botId, setActiveTa
 
       if (res.ok) {
         setEnvSaveMsg(t('botSavedSuccess'));
+        showToast('Environment variables saved successfully!', 'success');
         setTimeout(() => setEnvSaveMsg(null), 3000);
+      } else {
+        showToast('Failed to save environment variables.', 'error');
       }
     } catch (err) {
       console.error('Failed to save environment variables:', err);
+      showToast('Error saving environment variables.', 'error');
     } finally {
       setSavingEnv(false);
     }
@@ -328,6 +410,24 @@ export const BotDetailPage: React.FC<BotDetailPageProps> = ({ botId, setActiveTa
           >
             <Download className="w-3.5 h-3.5 text-indigo-400" />
             <span>Backup (.zip)</span>
+          </button>
+
+          <input
+            ref={restoreInputRef}
+            type="file"
+            accept=".zip"
+            onChange={handleRestoreBackup}
+            className="hidden"
+          />
+
+          <button
+            onClick={() => restoreInputRef.current?.click()}
+            disabled={restoring}
+            className="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-900 border border-slate-800 text-slate-300 hover:text-white hover:bg-slate-800 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+            title="Upload and restore project code from a ZIP backup"
+          >
+            {restoring ? <Loader2 className="w-3.5 h-3.5 animate-spin text-indigo-400" /> : <UploadCloud className="w-3.5 h-3.5 text-emerald-400" />}
+            <span>Restore</span>
           </button>
 
           <button
