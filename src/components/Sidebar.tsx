@@ -13,7 +13,9 @@ import {
   PlusCircle, 
   User as UserIcon,
   MessageSquare,
-  Users
+  Users,
+  Sparkles,
+  Info
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -29,6 +31,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
 
   const navItems = [
     { id: 'dashboard', label: t('navDashboard'), icon: LayoutDashboard },
+    { id: 'ai-assistant', label: 'AI Assistant', icon: Sparkles },
+    { id: 'ai-info', label: 'AI Platform Info', icon: Info },
     { id: 'bots', label: t('navMyBots'), icon: Bot },
     { id: 'editor', label: t('navCodeEditor'), icon: Code2 },
     { id: 'templates', label: t('navTemplates'), icon: Box },

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import { Language } from '../types';
 import { 
   Server, 
@@ -16,9 +17,15 @@ import {
   Code2,
   HelpCircle,
   Activity,
-  Box
+  Box,
+  Sun,
+  Moon,
+  Bot,
+  Sparkles,
+  Info
 } from 'lucide-react';
 import { NotificationDropdown } from './NotificationDropdown';
+import { MusicPlayer } from './MusicPlayer';
 
 interface HeaderProps {
   activeTab: string;
@@ -30,6 +37,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, toggleSidebar, isSidebarOpen }) => {
   const { language, setLanguage, t } = useLanguage();
   const { user, logout } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -42,7 +50,8 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, toggleS
   const languagesList: { code: Language; name: string; flag: string }[] = [
     { code: 'en', name: 'English', flag: '🇺🇸' },
     { code: 'ar', name: 'العربية', flag: '🇸🇦' },
-    { code: 'fr', name: 'Français', flag: '🇫🇷' }
+    { code: 'fr', name: 'Français', flag: '🇫🇷' },
+    { code: 'tr', name: 'Türkçe', flag: '🇹🇷' }
   ];
 
   return (
@@ -75,7 +84,7 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, toggleS
                     TRL Cloud
                   </span>
                   <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                    V1.0
+                    V1.3
                   </span>
                 </div>
                 <p className="text-[10px] text-slate-400 font-medium hidden sm:block">
@@ -156,6 +165,30 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, toggleS
             </button>
 
             <button
+              onClick={() => setActiveTab('ai-assistant')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                activeTab === 'ai-assistant' 
+                  ? 'bg-purple-600/90 text-white shadow-sm' 
+                  : 'text-purple-300 hover:text-white hover:bg-purple-900/30'
+              }`}
+            >
+              <Bot className="w-3.5 h-3.5 text-purple-400" />
+              <span>AI Assistant</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('ai-info')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                activeTab === 'ai-info' 
+                  ? 'bg-indigo-600/90 text-white shadow-sm' 
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+              }`}
+            >
+              <Info className="w-3.5 h-3.5" />
+              <span>AI Info</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('about')}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                 activeTab === 'about' 
@@ -168,8 +201,20 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, toggleS
           </nav>
 
           {/* Right Side Actions */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             
+            {/* Background Music Player */}
+            <MusicPlayer />
+
+            {/* Theme Switcher Button */}
+            <button
+              onClick={toggleTheme}
+              className="p-1.5 sm:p-2 rounded-xl bg-slate-900/80 border border-slate-800 text-amber-400 hover:text-amber-300 hover:bg-slate-800/80 transition"
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+            >
+              {theme === 'dark' ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-indigo-400" />}
+            </button>
+
             {/* Language Selector Button */}
             <div className="relative">
               <button

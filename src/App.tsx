@@ -20,13 +20,39 @@ import { AdminPage } from './pages/AdminPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { AIAssistantPage } from './pages/AIAssistantPage';
+import { AIInfoPage } from './pages/AIInfoPage';
+import { PageLoading, InitialSplashScreen } from './components/PageLoading';
+
+import { BotProject } from './types';
 
 const MainAppContent: React.FC = () => {
-  const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<string>('home');
+  const { user, getAuthHeader } = useAuth();
+  const [activeTab, setActiveTabState] = useState<string>('home');
+  const [isChangingTab, setIsChangingTab] = useState<boolean>(false);
+  const [isInitializing, setIsInitializing] = useState<boolean>(true);
   const [selectedBotId, setSelectedBotId] = useState<string>('proj-01');
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
   const [showCreateModal, setShowCreateModal] = useState<boolean>(false);
+  const [projects, setProjects] = useState<BotProject[]>([]);
+
+  const setActiveTab = (tab: string) => {
+    if (tab === activeTab) return;
+    setIsChangingTab(true);
+    setActiveTabState(tab);
+    setTimeout(() => {
+      setIsChangingTab(false);
+    }, 250);
+  };
+
+  React.useEffect(() => {
+    if (user) {
+      fetch('/api/projects', { headers: getAuthHeader() })
+        .then(res => res.ok ? res.json() : [])
+        .then(data => Array.isArray(data) && setProjects(data))
+        .catch(err => console.error('Failed to load projects:', err));
+    }
+  }, [user]);
 
   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -35,7 +61,11 @@ const MainAppContent: React.FC = () => {
     setActiveTab('bot-detail');
   };
 
-  const showSidebar = user && ['dashboard', 'bots', 'bot-detail', 'editor', 'templates', 'status', 'docs', 'support', 'about', 'admin', 'profile'].includes(activeTab);
+  const showSidebar = user && ['dashboard', 'bots', 'bot-detail', 'editor', 'templates', 'status', 'docs', 'support', 'about', 'admin', 'profile', 'ai-assistant', 'ai-info'].includes(activeTab);
+
+  if (isInitializing) {
+    return <InitialSplashScreen onComplete={() => setIsInitializing(false)} />;
+  }
 
   return (
     <div className="min-h-screen bg-[#08090d] text-slate-100 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
@@ -63,7 +93,11 @@ const MainAppContent: React.FC = () => {
 
         {/* Page Views Container */}
         <main className={`flex-1 p-4 sm:p-6 lg:p-8 ${showSidebar ? 'w-full' : ''}`}>
-          {activeTab === 'home' && (
+          {isChangingTab ? (
+            <PageLoading message={`Loading ${activeTab.replace('-', ' ')}...`} />
+          ) : (
+            <>
+              {activeTab === 'home' && (
             <LandingPage 
               setActiveTab={setActiveTab} 
               onOpenCreateModal={() => setShowCreateModal(true)} 
@@ -107,6 +141,15 @@ const MainAppContent: React.FC = () => {
             />
           )}
 
+          {activeTab === 'ai-assistant' && (
+            <AIAssistantPage 
+              projects={projects} 
+              token={localStorage.getItem('trl_jwt_token')} 
+            />
+          )}
+
+          {activeTab === 'ai-info' && <AIInfoPage />}
+
           {activeTab === 'status' && <SystemStatusPage />}
 
           {activeTab === 'docs' && <DocsPage />}
@@ -122,6 +165,8 @@ const MainAppContent: React.FC = () => {
           {activeTab === 'login' && <LoginPage setActiveTab={setActiveTab} />}
 
           {activeTab === 'register' && <RegisterPage setActiveTab={setActiveTab} />}
+            </>
+          )}
         </main>
 
       </div>

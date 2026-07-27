@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { Language } from '../types';
 import { User, Globe, Key, Save, CheckCircle2, AlertCircle, Loader2, Shield } from 'lucide-react';
+import { DiscordSection } from '../components/DiscordSection';
 
 export const ProfilePage: React.FC = () => {
   const { user, updateProfile } = useAuth();
@@ -98,6 +99,7 @@ export const ProfilePage: React.FC = () => {
               <option value="en">English 🇺🇸</option>
               <option value="ar">العربية 🇸🇦</option>
               <option value="fr">Français 🇫🇷</option>
+              <option value="tr">Türkçe 🇹🇷</option>
             </select>
           </div>
 
@@ -123,6 +125,9 @@ export const ProfilePage: React.FC = () => {
         </form>
 
       </div>
+
+      {/* Discord Section */}
+      <DiscordSection />
 
     </div>
   );

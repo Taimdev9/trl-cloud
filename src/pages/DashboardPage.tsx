@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { BotProject, SystemNode } from '../types';
+import { DiscordSection } from '../components/DiscordSection';
 import { 
   Bot, 
   Play, 
@@ -163,6 +164,9 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({ setActiveTab, setS
         </div>
 
       </div>
+
+      {/* Discord OAuth Integration Section */}
+      <DiscordSection />
 
       {/* Main Bot Projects List */}
       <div className="space-y-4">

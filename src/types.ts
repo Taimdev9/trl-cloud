@@ -1,8 +1,17 @@
-export type Language = 'en' | 'ar' | 'fr';
+export type Language = 'en' | 'ar' | 'fr' | 'tr';
 
 export type BotLanguage = 'nodejs' | 'python' | 'java' | 'csharp';
 
 export type BotStatus = 'online' | 'offline' | 'error' | 'starting' | 'installing';
+
+export interface DiscordAccount {
+  id: string;
+  username: string;
+  discriminator: string;
+  globalName?: string;
+  avatar?: string;
+  connectedAt: string;
+}
 
 export interface User {
   id: string;
@@ -13,6 +22,7 @@ export interface User {
   language: Language;
   createdAt: string;
   isVerified?: boolean;
+  discord?: DiscordAccount;
 }
 
 export interface BotErrorDiagnostic {

@@ -12,6 +12,8 @@ interface AuthContextType {
   updateProfile: (data: { username?: string; language?: Language; password?: string }) => Promise<{ success: boolean; error?: string }>;
   refreshUser: () => Promise<void>;
   getAuthHeader: () => Record<string, string>;
+  connectDiscord: () => Promise<void>;
+  disconnectDiscord: () => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -55,7 +57,76 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     refreshUser();
+
+    const handleMessage = (event: MessageEvent) => {
+      const origin = event.origin;
+      if (!origin.endsWith('.run.app') && !origin.includes('localhost') && origin !== window.location.origin) {
+        return;
+      }
+      if (event.data?.type === 'DISCORD_AUTH_SUCCESS') {
+        if (event.data.token) {
+          localStorage.setItem('trl_cloud_token', event.data.token);
+          setToken(event.data.token);
+        }
+        if (event.data.user) {
+          setUser(event.data.user);
+        }
+        refreshUser();
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
   }, []);
+
+  const connectDiscord = async () => {
+    try {
+      const currentToken = token || localStorage.getItem('trl_cloud_token');
+      const redirectUri = `${window.location.origin}/api/auth/discord/callback`;
+      const res = await fetch(`/api/auth/discord/url?redirect_uri=${encodeURIComponent(redirectUri)}${currentToken ? '&state=' + encodeURIComponent(currentToken) : ''}`);
+      
+      if (!res.ok) {
+        throw new Error('Failed to get Discord authorization URL');
+      }
+
+      const { url } = await res.json();
+      const width = 600;
+      const height = 700;
+      const left = window.screenX + (window.innerWidth - width) / 2;
+      const top = window.screenY + (window.innerHeight - height) / 2;
+
+      const popup = window.open(
+        url,
+        'discord_oauth_popup',
+        `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,status=yes`
+      );
+
+      if (!popup) {
+        alert('Please allow popups to connect your Discord account.');
+      }
+    } catch (err) {
+      console.error('Discord Auth Error:', err);
+    }
+  };
+
+  const disconnectDiscord = async () => {
+    try {
+      const res = await fetch('/api/auth/discord/disconnect', {
+        method: 'DELETE',
+        headers: getAuthHeader()
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+        return { success: true };
+      } else {
+        const err = await res.json();
+        return { success: false, error: err.error || 'Failed to disconnect Discord account' };
+      }
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Error disconnecting Discord' };
+    }
+  };
 
   const login = async (email: string, pass: string) => {
     try {
@@ -166,7 +237,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       logout,
       updateProfile,
       refreshUser,
-      getAuthHeader
+      getAuthHeader,
+      connectDiscord,
+      disconnectDiscord
     }}>
       {children}
     </AuthContext.Provider>
