@@ -12,7 +12,8 @@ import {
   ShieldAlert, 
   PlusCircle, 
   User as UserIcon,
-  MessageSquare
+  MessageSquare,
+  Users
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -34,6 +35,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, isOpe
     { id: 'status', label: t('navStatus'), icon: Activity },
     { id: 'docs', label: t('navDocs'), icon: BookOpen },
     { id: 'support', label: t('navSupport'), icon: HelpCircle },
+    { id: 'about', label: 'About TRL Team', icon: Users },
     { id: 'profile', label: t('navProfile'), icon: UserIcon }
   ];
 

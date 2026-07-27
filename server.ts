@@ -3,7 +3,6 @@ import path from 'path';
 import fs from 'fs';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import nodemailer from 'nodemailer';
 import JSZip from 'jszip';
 import { createServer as createViteServer } from 'vite';
 
@@ -31,6 +30,8 @@ interface DBUser {
   isVerified?: boolean;
   verificationCode?: string;
   verificationExpires?: string;
+  resetCode?: string;
+  resetExpires?: string;
 }
 
 interface DBFile {
@@ -221,56 +222,6 @@ PREFIX=!
 `
   }
 ];
-
-// Email sending helper
-async function sendVerificationEmail(email: string, code: string) {
-  const host = process.env.SMTP_HOST;
-  const port = process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT, 10) : 587;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  const from = process.env.SMTP_FROM || '"TRL Cloud" <no-reply@trlcloud.com>';
-
-  console.log(`\n=============================================================`);
-  console.log(`[TRL EMAIL VERIFICATION CODE]`);
-  console.log(`Target Email: ${email}`);
-  console.log(`6-Digit Verification Code: ${code}`);
-  console.log(`Expires in: 15 minutes`);
-  console.log(`=============================================================\n`);
-
-  if (host && user && pass) {
-    try {
-      const transporter = nodemailer.createTransport({
-        host,
-        port,
-        secure: port === 465,
-        auth: { user, pass }
-      });
-
-      await transporter.sendMail({
-        from,
-        to: email,
-        subject: '🔐 TRL Cloud - Verify Your Account Code: ' + code,
-        html: `
-          <div style="font-family: Arial, sans-serif; background-color: #0b0f19; padding: 30px; color: #ffffff;">
-            <div style="max-width: 500px; margin: 0 auto; background-color: #111827; border-radius: 16px; padding: 24px; border: 1px solid #374151;">
-              <h2 style="color: #6366f1; margin-top: 0;">⚡ TRL Cloud Verification</h2>
-              <p style="color: #d1d5db; font-size: 14px;">Welcome to TRL Cloud! Enter the following 6-digit code to verify your email and activate your Discord bot hosting workspace:</p>
-              <div style="background-color: #1f2937; padding: 16px; border-radius: 12px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #10b981; margin: 20px 0;">
-                ${code}
-              </div>
-              <p style="color: #9ca3af; font-size: 12px;">This code expires in 15 minutes. If you did not create a TRL Cloud account, please ignore this message.</p>
-              <hr style="border: none; border-top: 1px solid #374151; margin: 20px 0;" />
-              <p style="color: #6b7280; font-size: 11px; text-align: center;">TRL TEAM FOR DEVELOPMENT &copy; 2026</p>
-            </div>
-          </div>
-        `
-      });
-      console.log(`[TRL Email Verification] Real SMTP email sent successfully to ${email}`);
-    } catch (err) {
-      console.error(`[TRL Email Verification] SMTP Email sending failed:`, err);
-    }
-  }
-}
 
 // Bot error diagnostics engine
 function analyzeProjectErrors(project: DBProject, logs: DBLog[]) {
@@ -589,6 +540,30 @@ function addProjectLog(projectId: string, type: 'info' | 'warn' | 'error' | 'suc
   saveDB(db);
 }
 
+// Rate Limiter
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
+
+function createRateLimiter(maxRequests: number, windowMs: number) {
+  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
+    const ip = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
+    const key = `${req.path}:${ip}`;
+    const now = Date.now();
+    const record = rateLimitMap.get(key);
+
+    if (!record || now > record.resetAt) {
+      rateLimitMap.set(key, { count: 1, resetAt: now + windowMs });
+      return next();
+    }
+
+    if (record.count >= maxRequests) {
+      return res.status(429).json({ error: 'Too many requests. Please wait a minute before trying again.' });
+    }
+
+    record.count += 1;
+    next();
+  };
+}
+
 // Middleware: Authenticate JWT
 function authenticateJWT(req: express.Request, res: express.Response, next: express.NextFunction) {
   const authHeader = req.headers.authorization;
@@ -612,6 +587,8 @@ async function startServer() {
   app.use(express.json({ limit: '50mb' }));
   app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+  const authLimiter = createRateLimiter(15, 60 * 1000);
+
   // API Routes
 
   // Health check
@@ -626,7 +603,7 @@ async function startServer() {
   });
 
   // Auth: Register
-  app.post('/api/auth/register', async (req, res) => {
+  app.post('/api/auth/register', authLimiter, async (req, res) => {
     const { username, email, password, language } = req.body;
     if (!username || !email || !password) {
       return res.status(400).json({ error: 'Username, email, and password are required' });
@@ -638,8 +615,6 @@ async function startServer() {
       return res.status(400).json({ error: 'User with this email already exists' });
     }
 
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const verificationExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
     const passwordHash = await bcrypt.hash(password, 10);
 
     const newUser: DBUser = {
@@ -650,9 +625,7 @@ async function startServer() {
       role: 'user',
       language: language || 'en',
       createdAt: new Date().toISOString(),
-      isVerified: false,
-      verificationCode,
-      verificationExpires
+      isVerified: true
     };
 
     db.users.push(newUser);
@@ -662,7 +635,7 @@ async function startServer() {
       id: 'notif-' + Date.now(),
       userId: newUser.id,
       title: 'Welcome to TRL Cloud',
-      message: 'Account created! Please verify your email code to activate bot hosting.',
+      message: 'Account created successfully! Enjoy hosting your Discord bots.',
       type: 'info',
       read: false,
       timestamp: new Date().toISOString()
@@ -670,85 +643,70 @@ async function startServer() {
 
     saveDB(db);
 
-    // Send verification code email/log
-    await sendVerificationEmail(newUser.email, verificationCode);
+    const token = jwt.sign({ userId: newUser.id, role: newUser.role }, JWT_SECRET, { expiresIn: '7d' });
+    const { passwordHash: _, ...safeUser } = newUser;
 
     res.json({
-      requireVerification: true,
-      email: newUser.email,
-      message: 'Registration successful! A 6-digit verification code has been sent to your email.',
-      codeForDemo: verificationCode
+      token,
+      user: safeUser,
+      message: 'Registration successful!'
     });
   });
 
-  // Auth: Verify Email Code
-  app.post('/api/auth/verify-email', async (req, res) => {
-    const { email, code } = req.body;
-    if (!email || !code) {
-      return res.status(400).json({ error: 'Email and verification code are required' });
+  // Auth: Google Sign-In
+  app.post('/api/auth/google', authLimiter, async (req, res) => {
+    const { email, name, avatar } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Google account email is required' });
     }
 
     const db = getDB();
-    const user = db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+    let user = db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
 
-    if (user.isVerified) {
-      const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-      const { passwordHash: _, verificationCode: __, verificationExpires: ___, ...safeUser } = user;
-      return res.json({ token, user: safeUser, message: 'Account is already verified!' });
-    }
+    if (user) {
+      if (user.isBanned) {
+        return res.status(403).json({ error: 'This account has been suspended by TRL Cloud administrators.' });
+      }
+    } else {
+      // Auto create Google account
+      const generatedUsername = name || email.split('@')[0];
+      const randomPassword = await bcrypt.hash('google-' + Math.random().toString(36), 10);
 
-    if (!user.verificationCode || user.verificationCode !== String(code).trim()) {
-      return res.status(400).json({ error: 'Invalid 6-digit verification code' });
-    }
+      user = {
+        id: 'usr-g-' + Date.now(),
+        username: generatedUsername,
+        email: email.toLowerCase(),
+        passwordHash: randomPassword,
+        role: 'user',
+        avatar: avatar || 'https://lh3.googleusercontent.com/a/default-user',
+        language: 'en',
+        createdAt: new Date().toISOString(),
+        isVerified: true
+      };
 
-    if (user.verificationExpires && new Date(user.verificationExpires) < new Date()) {
-      return res.status(400).json({ error: 'Verification code has expired. Please click Resend Code.' });
-    }
+      db.users.push(user);
 
-    user.isVerified = true;
-    delete user.verificationCode;
-    delete user.verificationExpires;
-    saveDB(db);
+      db.notifications.push({
+        id: 'notif-' + Date.now(),
+        userId: user.id,
+        title: 'Welcome to TRL Cloud',
+        message: 'Signed in with Google successfully!',
+        type: 'info',
+        read: false,
+        timestamp: new Date().toISOString()
+      });
+
+      saveDB(db);
+    }
 
     const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-    const { passwordHash: _, verificationCode: __, verificationExpires: ___, ...safeUser } = user;
+    const { passwordHash: _, ...safeUser } = user;
 
-    res.json({ token, user: safeUser, message: 'Email verified successfully! Welcome to TRL Cloud.' });
-  });
-
-  // Auth: Resend Code
-  app.post('/api/auth/resend-code', async (req, res) => {
-    const { email } = req.body;
-    if (!email) {
-      return res.status(400).json({ error: 'Email is required' });
-    }
-
-    const db = getDB();
-    const user = db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-    const verificationExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-
-    user.verificationCode = verificationCode;
-    user.verificationExpires = verificationExpires;
-    saveDB(db);
-
-    await sendVerificationEmail(user.email, verificationCode);
-
-    res.json({
-      message: 'New 6-digit verification code sent successfully!',
-      codeForDemo: verificationCode
-    });
+    res.json({ token, user: safeUser, message: 'Google Sign-In successful!' });
   });
 
   // Auth: Login
-  app.post('/api/auth/login', async (req, res) => {
+  app.post('/api/auth/login', authLimiter, async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
@@ -769,27 +727,30 @@ async function startServer() {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    // Check if verified
-    if (user.isVerified === false) {
-      const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
-      user.verificationCode = verificationCode;
-      user.verificationExpires = new Date(Date.now() + 15 * 60 * 1000).toISOString();
-      saveDB(db);
-
-      await sendVerificationEmail(user.email, verificationCode);
-
-      return res.status(403).json({
-        requireVerification: true,
-        email: user.email,
-        error: 'Email verification required. A 6-digit code has been sent to your email.',
-        codeForDemo: verificationCode
-      });
-    }
-
     const token = jwt.sign({ userId: user.id, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-    const { passwordHash: _, verificationCode: __, verificationExpires: ___, ...safeUser } = user;
+    const { passwordHash: _, ...safeUser } = user;
 
     res.json({ token, user: safeUser });
+  });
+
+  // Auth: Password Reset
+  app.post('/api/auth/reset-password', authLimiter, async (req, res) => {
+    const { email, newPassword } = req.body;
+    if (!email || !newPassword) {
+      return res.status(400).json({ error: 'Email and new password are required' });
+    }
+
+    const db = getDB();
+    const user = db.users.find(u => u.email.toLowerCase() === email.toLowerCase());
+    if (!user) {
+      return res.status(404).json({ error: 'Account with this email does not exist.' });
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    user.passwordHash = passwordHash;
+    saveDB(db);
+
+    res.json({ message: 'Password updated successfully! You can now log in.' });
   });
 
   // Auth: Get Current User
@@ -1074,6 +1035,92 @@ async function startServer() {
     const logs = db.logs[id] || [];
     const diagnostic = analyzeProjectErrors(proj, logs);
     res.json({ diagnostic });
+  });
+
+  // Projects: AI Error Assistant
+  app.post('/api/projects/:id/ai-assistant', authenticateJWT, async (req, res) => {
+    const { id } = req.params;
+    const { userPrompt } = req.body;
+    const db = getDB();
+
+    const proj = db.projects.find(p => p.id === id);
+    if (!proj) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    const logs = db.logs[id] || [];
+    const recentLogs = logs.slice(-25).map(l => `[${l.type.toUpperCase()}] ${l.message}`).join('\n');
+    const mainCode = proj.files.find(f => f.path === proj.mainFile)?.content || '';
+
+    let aiAnalysis = '';
+
+    if (process.env.GEMINI_API_KEY) {
+      try {
+        const { GoogleGenAI } = await import('@google/genai');
+        const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+        const model = 'gemini-2.5-flash';
+
+        const promptText = `You are the TRL Cloud Bot Repair AI Assistant.
+Analyze this ${proj.language} Discord bot project for crashes/errors.
+
+Bot Name: ${proj.name}
+Language: ${proj.language}
+Main File (${proj.mainFile}):
+\`\`\`
+${mainCode}
+\`\`\`
+
+Recent Console Output:
+\`\`\`
+${recentLogs || 'No logs recorded yet.'}
+\`\`\`
+
+User Request: ${userPrompt || 'Analyze my bot for errors, explain what happened, and provide a solution.'}
+
+Provide:
+1. Root Cause Explanation
+2. Exact Steps to Fix
+3. Complete Corrected Code Snippet`;
+
+        const response = await ai.models.generateContent({
+          model,
+          contents: promptText
+        });
+
+        aiAnalysis = response.text || '';
+      } catch (geminiErr) {
+        console.error('Gemini API call failed, falling back to local diagnostic engine:', geminiErr);
+      }
+    }
+
+    if (!aiAnalysis) {
+      const diag = analyzeProjectErrors(proj, logs);
+      if (diag.hasError) {
+        aiAnalysis = `### 🤖 TRL Cloud AI Diagnostic Report
+
+**Issue Identified**: ${diag.title}
+**Error Type**: ${diag.errorType}
+
+#### 🔍 Root Cause Analysis
+${diag.description}
+
+#### 💡 Solution & Suggested Repair
+${diag.suggestedFix}
+
+${diag.detectedLog ? `\`\`\`log\n${diag.detectedLog}\n\`\`\`` : ''}`;
+      } else {
+        aiAnalysis = `### 🤖 TRL Cloud AI Diagnostic Report
+
+**Status**: No critical crashes detected in recent console logs.
+
+#### 💡 Recommendations for Bot Stability:
+1. Ensure your \`BOT_TOKEN\` env variable is configured properly in the Environment Variables tab.
+2. Ensure required NPM/pip packages are listed in your project code.
+3. Keep auto-restart enabled for continuous uptime.`;
+      }
+    }
+
+    res.json({ analysis: aiAnalysis });
   });
 
   // Projects: Download Backup ZIP

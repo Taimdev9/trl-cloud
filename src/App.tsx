@@ -15,6 +15,7 @@ import { BotTemplatesPage } from './pages/BotTemplatesPage';
 import { SystemStatusPage } from './pages/SystemStatusPage';
 import { DocsPage } from './pages/DocsPage';
 import { SupportPage } from './pages/SupportPage';
+import { AboutPage } from './pages/AboutPage';
 import { AdminPage } from './pages/AdminPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { LoginPage } from './pages/LoginPage';
@@ -34,7 +35,7 @@ const MainAppContent: React.FC = () => {
     setActiveTab('bot-detail');
   };
 
-  const showSidebar = user && ['dashboard', 'bots', 'bot-detail', 'editor', 'templates', 'status', 'docs', 'support', 'admin', 'profile'].includes(activeTab);
+  const showSidebar = user && ['dashboard', 'bots', 'bot-detail', 'editor', 'templates', 'status', 'docs', 'support', 'about', 'admin', 'profile'].includes(activeTab);
 
   return (
     <div className="min-h-screen bg-[#08090d] text-slate-100 flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
@@ -111,6 +112,8 @@ const MainAppContent: React.FC = () => {
           {activeTab === 'docs' && <DocsPage />}
 
           {activeTab === 'support' && <SupportPage />}
+
+          {activeTab === 'about' && <AboutPage />}
 
           {activeTab === 'admin' && <AdminPage />}
 

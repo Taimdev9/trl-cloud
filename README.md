@@ -19,27 +19,31 @@ It allows users to create, upload, manage, edit, and host Node.js and Python Dis
   - Arabic 🇸🇦 (with RTL direction & clean alignment)
   - French 🇫🇷
 
-- 🔐 **User Account System**:
+- 🔐 **Instant Simple Registration & Authentication**:
+  - **Username + Password** registration with instant account activation.
+  - **Continue with Google**: Instant 1-click Google account login & auto-provisioning.
+  - **Terms & Privacy Checkbox**: Custom modern interactive Terms agreement check before account creation.
+  - **No Email Verification Codes**: Fast, hassle-free onboarding without SMTP or verification codes.
   - Secure JWT authentication with bcrypt password hashing.
-  - User profiles, role-based access control (User / Admin), and settings.
 
 - 💻 **Supported Bot Languages**:
   - **JavaScript (Node.js)**: Discord.js v14 ready.
   - **Python**: discord.py / disnake ready.
 
-- 📊 **Real-time Bot Controls**:
+- 📊 **Real-time Bot Controls & Persistence**:
   - Start, Stop, and Restart bot instances.
   - Live console streaming logs with search, auto-scroll, and log clearing.
+  - Permanent project state & backup .ZIP downloads.
   - Environment Variables / Secrets Manager (`BOT_TOKEN`, `CLIENT_SECRET`, etc.).
   - Resource meters for CPU, Memory (RAM), and Uptime.
+
+- 🤖 **AI Error Assistant & Diagnostics**:
+  - Automatic error detection engine for crashes, syntax errors, and missing packages.
+  - Integrated AI Assistant providing automated root-cause analysis and code repair snippets.
 
 - 🛠️ **Admin Panel**:
   - Monitor global registered users, active bots, and server node load.
   - Ban / Unban user accounts and force-stop misbehaving bot projects.
-
-- 📖 **Docs & Support**:
-  - Interactive System Status page for cloud infrastructure nodes.
-  - Developer documentation guides and support ticket submission.
 
 ---
 
@@ -54,39 +58,39 @@ Contact Details:
 
 ---
 
-## 🛠️ Deployment Instructions
+## 🛠️ Environment Variables Setup
 
-### Local Development
+TRL Cloud requires minimal configuration to deploy on Render or Cloud environments:
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/trl-cloud.git
-   cd trl-cloud
-   ```
+| Environment Variable | Required | Description | Example |
+|---|---|---|---|
+| `JWT_SECRET` | Yes | JWT Signing Key | `trl-cloud-jwt-secret-key` |
+| `GEMINI_API_KEY` | Optional | Gemini API key for AI Error Assistant | `AIzaSy...` |
+| `PORT` | Auto | Bind Port (Render sets this automatically) | `3000` |
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+*(Note: No SMTP, CAPTCHA, or external database setup required).*
 
-3. Set up environment variables:
-   Copy `.env.example` to `.env`:
-   ```bash
-   cp .env.example .env
-   ```
+---
 
-4. Start development server:
-   ```bash
-   npm run dev
-   ```
+## 🚀 Render Deployment Instructions
 
-### Deploying to Render
+TRL Cloud is fully pre-configured for deployment on **Render.com**.
 
-This repository includes a `render.yaml` blueprint file.
-1. Connect your repository to Render.
-2. Select **New Web Service** or import `render.yaml`.
-3. Set build command: `npm install && npm run build`
-4. Set start command: `npm start`
+### 1. Web Service Configuration on Render
+1. Go to your Render Dashboard and create a **New Web Service**.
+2. Connect your GitHub repository.
+3. Configure the build settings:
+   - **Environment**: `Node`
+   - **Build Command**: `npm install && npm run build`
+   - **Start Command**: `npm start`
+   - **Node Version**: `18.x` or higher
+
+### 2. Configure Environment Variables in Render
+In the **Environment** tab of your Render Web Service, add:
+- `JWT_SECRET` = `your-custom-jwt-secret`
+- `GEMINI_API_KEY` = *(optional for AI Bot Assistant)*
+
+Render automatically sets the `PORT` variable (e.g., `10000`), which `server.ts` automatically binds to `0.0.0.0`.
 
 ---
 

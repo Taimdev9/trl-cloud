@@ -5,13 +5,9 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   loading: boolean;
-  pendingEmail: string | null;
-  demoCode: string | null;
-  setPendingEmail: (email: string | null) => void;
-  login: (email: string, pass: string) => Promise<{ success: boolean; requireVerification?: boolean; email?: string; codeForDemo?: string; error?: string }>;
-  register: (username: string, email: string, pass: string, lang?: Language) => Promise<{ success: boolean; requireVerification?: boolean; email?: string; codeForDemo?: string; error?: string }>;
-  verifyEmail: (email: string, code: string) => Promise<{ success: boolean; error?: string }>;
-  resendVerificationCode: (email: string) => Promise<{ success: boolean; codeForDemo?: string; error?: string }>;
+  login: (email: string, pass: string) => Promise<{ success: boolean; error?: string }>;
+  loginWithGoogle: (profile: { email: string; name?: string; avatar?: string }) => Promise<{ success: boolean; error?: string }>;
+  register: (username: string, email: string, pass: string, lang?: Language) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   updateProfile: (data: { username?: string; language?: Language; password?: string }) => Promise<{ success: boolean; error?: string }>;
   refreshUser: () => Promise<void>;
@@ -24,8 +20,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(() => localStorage.getItem('trl_cloud_token'));
   const [loading, setLoading] = useState<boolean>(true);
-  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
-  const [demoCode, setDemoCode] = useState<string | null>(null);
 
   const getAuthHeader = () => {
     const currentToken = token || localStorage.getItem('trl_cloud_token');
@@ -73,12 +67,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const data = await res.json();
 
-      if (data.requireVerification) {
-        setPendingEmail(data.email || email);
-        if (data.codeForDemo) setDemoCode(data.codeForDemo);
-        return { success: false, requireVerification: true, email: data.email || email, codeForDemo: data.codeForDemo, error: data.error };
-      }
-
       if (!res.ok) {
         return { success: false, error: data.error || 'Login failed' };
       }
@@ -86,11 +74,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       localStorage.setItem('trl_cloud_token', data.token);
       setToken(data.token);
       setUser(data.user);
-      setPendingEmail(null);
-      setDemoCode(null);
       return { success: true };
     } catch (err: any) {
       return { success: false, error: err.message || 'Network error during login' };
+    }
+  };
+
+  const loginWithGoogle = async (profile: { email: string; name?: string; avatar?: string }) => {
+    try {
+      const res = await fetch('/api/auth/google', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(profile)
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        return { success: false, error: data.error || 'Google Sign-In failed' };
+      }
+
+      localStorage.setItem('trl_cloud_token', data.token);
+      setToken(data.token);
+      setUser(data.user);
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Network error during Google Sign-In' };
     }
   };
 
@@ -103,12 +112,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       const data = await res.json();
-
-      if (data.requireVerification) {
-        setPendingEmail(data.email || email);
-        if (data.codeForDemo) setDemoCode(data.codeForDemo);
-        return { success: true, requireVerification: true, email: data.email || email, codeForDemo: data.codeForDemo };
-      }
 
       if (!res.ok) {
         return { success: false, error: data.error || 'Registration failed' };
@@ -123,56 +126,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const verifyEmail = async (email: string, code: string) => {
-    try {
-      const res = await fetch('/api/auth/verify-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code })
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        return { success: false, error: data.error || 'Verification failed' };
-      }
-
-      localStorage.setItem('trl_cloud_token', data.token);
-      setToken(data.token);
-      setUser(data.user);
-      setPendingEmail(null);
-      setDemoCode(null);
-      return { success: true };
-    } catch (err: any) {
-      return { success: false, error: err.message || 'Network error verifying email' };
-    }
-  };
-
-  const resendVerificationCode = async (email: string) => {
-    try {
-      const res = await fetch('/api/auth/resend-code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        return { success: false, error: data.error || 'Failed to resend code' };
-      }
-
-      if (data.codeForDemo) setDemoCode(data.codeForDemo);
-      return { success: true, codeForDemo: data.codeForDemo };
-    } catch (err: any) {
-      return { success: false, error: err.message || 'Network error resending code' };
-    }
-  };
-
   const logout = () => {
     localStorage.removeItem('trl_cloud_token');
     setToken(null);
     setUser(null);
-    setPendingEmail(null);
-    setDemoCode(null);
   };
 
   const updateProfile = async (data: { username?: string; language?: Language; password?: string }) => {
@@ -203,13 +160,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user,
       token,
       loading,
-      pendingEmail,
-      demoCode,
-      setPendingEmail,
       login,
+      loginWithGoogle,
       register,
-      verifyEmail,
-      resendVerificationCode,
       logout,
       updateProfile,
       refreshUser,

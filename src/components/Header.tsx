@@ -154,6 +154,17 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, toggleS
             >
               {t('navSupport')}
             </button>
+
+            <button
+              onClick={() => setActiveTab('about')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                activeTab === 'about' 
+                  ? 'bg-indigo-600/90 text-white shadow-sm' 
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+              }`}
+            >
+              About Team
+            </button>
           </nav>
 
           {/* Right Side Actions */}
